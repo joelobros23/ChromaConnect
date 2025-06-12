@@ -74,6 +74,37 @@ document.addEventListener('DOMContentLoaded', () => {
                         likeButton.dataset.postId = post.id;
                         likeButton.addEventListener('click', handleLikeClick);
 
+                        // Comment Section
+                        const commentSection = document.createElement('div');
+                        commentSection.classList.add('comment-section');
+
+                        const commentForm = document.createElement('form');
+                        commentForm.classList.add('comment-form');
+                        commentForm.dataset.postId = post.id;
+
+                        const commentInput = document.createElement('input');
+                        commentInput.type = 'text';
+                        commentInput.placeholder = 'Add a comment...';
+                        commentInput.classList.add('comment-input');
+
+                        const commentButton = document.createElement('button');
+                        commentButton.textContent = 'Post Comment';
+                        commentButton.classList.add('comment-button');
+
+                        commentForm.appendChild(commentInput);
+                        commentForm.appendChild(commentButton);
+
+                        commentForm.addEventListener('submit', handleCommentSubmit);
+
+                        commentSection.appendChild(commentForm);
+
+                         // Container for displaying comments
+                        const commentsContainer = document.createElement('div');
+                        commentsContainer.classList.add('comments-container');
+                        commentSection.appendChild(commentsContainer);
+
+                        loadComments(post.id, commentsContainer);
+
                         const hrElement = document.createElement('hr');
 
                         // Append elements to the post element
@@ -82,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         postElement.appendChild(authorElement);
                         postElement.appendChild(dateElement);
                         postElement.appendChild(likeButton);
+                        postElement.appendChild(commentSection);
                         postElement.appendChild(hrElement);
 
 
@@ -123,6 +155,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function handleCommentSubmit(event) {
+        event.preventDefault();
+        const postId = event.target.dataset.postId;
+        const commentInput = event.target.querySelector('.comment-input');
+        const commentText = commentInput.value.trim();
+
+        if (!commentText) {
+            alert('Please enter a comment.');
+            return;
+        }
+
+        try {
+            const response = await fetch('api/add_comment.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    post_id: postId,
+                    comment_text: commentText
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                commentInput.value = ''; // Clear the input
+                const commentsContainer = event.target.closest('.comment-section').querySelector('.comments-container');
+                loadComments(postId, commentsContainer); // Reload comments
+            } else {
+                alert(data.message || 'Failed to add comment.');
+            }
+        } catch (error) {
+            console.error('Error adding comment:', error);
+            alert('An error occurred while adding the comment.');
+        }
+    }
+
+    async function loadComments(postId, commentsContainer) {
+        try {
+            const response = await fetch(`api/get_comments.php?post_id=${postId}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                commentsContainer.innerHTML = ''; // Clear existing comments
+                data.forEach(comment => {
+                    const commentElement = document.createElement('div');
+                    commentElement.classList.add('comment');
+                    commentElement.innerHTML = `<strong>${comment.username}:</strong> ${comment.comment_text}`;
+                    commentsContainer.appendChild(commentElement);
+                });
+            } else {
+                console.error('Failed to load comments:', data.message);
+                commentsContainer.textContent = 'Failed to load comments.';
+            }
+        } catch (error) {
+            console.error('Error loading comments:', error);
+            commentsContainer.textContent = 'Error loading comments.';
+        }
+    }
 
     loadPosts(); // Call load posts on page load
 });
