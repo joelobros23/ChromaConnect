@@ -51,13 +51,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     data.forEach(post => {
                         const postElement = document.createElement('div');
-                        postElement.innerHTML = `
-                            <img src="${post.image_path}" alt="Post Image" style="max-width: 100%;">
-                            <p>${post.caption}</p>
-                            <p>Posted by: ${post.username}</p>
-                            <p>Created at: ${post.created_at}</p>
-                            <hr>
-                        `;
+                        postElement.classList.add('post'); // Add a class for styling
+
+                        // Create elements for post content
+                        const imageElement = document.createElement('img');
+                        imageElement.src = post.image_path;
+                        imageElement.alt = "Post Image";
+                        imageElement.style.maxWidth = '100%';
+
+                        const captionElement = document.createElement('p');
+                        captionElement.textContent = post.caption;
+
+                        const authorElement = document.createElement('p');
+                        authorElement.textContent = `Posted by: ${post.username}`;
+
+                        const dateElement = document.createElement('p');
+                        dateElement.textContent = `Created at: ${post.created_at}`;
+
+                        const hrElement = document.createElement('hr');
+
+                        // Append elements to the post element
+                        postElement.appendChild(imageElement);
+                        postElement.appendChild(captionElement);
+                        postElement.appendChild(authorElement);
+                        postElement.appendChild(dateElement);
+                        postElement.appendChild(hrElement);
+
+
                         postsContainer.appendChild(postElement);
                     });
                 }
