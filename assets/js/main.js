@@ -68,6 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         const dateElement = document.createElement('p');
                         dateElement.textContent = `Created at: ${post.created_at}`;
 
+                        const likeButton = document.createElement('button');
+                        likeButton.textContent = post.is_liked ? 'Unlike' : 'Like';
+                        likeButton.classList.add('like-button');
+                        likeButton.dataset.postId = post.id;
+                        likeButton.addEventListener('click', handleLikeClick);
+
                         const hrElement = document.createElement('hr');
 
                         // Append elements to the post element
@@ -75,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         postElement.appendChild(captionElement);
                         postElement.appendChild(authorElement);
                         postElement.appendChild(dateElement);
+                        postElement.appendChild(likeButton);
                         postElement.appendChild(hrElement);
 
 
@@ -85,5 +92,37 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => console.error('Error loading posts:', error));
     }
+
+    async function handleLikeClick(event) {
+        const postId = event.target.dataset.postId;
+        const isLiked = event.target.textContent === 'Unlike';
+    
+        try {
+            let url = isLiked ? 'api/unlike_post.php' : 'api/like_post.php';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ post_id: postId })
+            });
+    
+            const data = await response.json();
+    
+            if (response.ok) {
+                // Optimistically update the button text
+                event.target.textContent = isLiked ? 'Like' : 'Unlike';
+                // Optionally, refresh the posts feed or just update the like count.
+                loadPosts();
+            } else {
+                alert(data.message || 'Failed to update like status.');
+            }
+        } catch (error) {
+            console.error('Error updating like status:', error);
+            alert('An error occurred while updating like status.');
+        }
+    }
+
+
     loadPosts(); // Call load posts on page load
 });
